@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Curved Line Charts</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style>
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            width: auto;
+            height: auto;
+            padding: 6px;
+            font: 12px sans-serif;
+            background: lightsteelblue;
+            border: 0px;
+            border-radius: 8px;
+            pointer-events: none;
+            opacity: 0;
+        }
+        svg {
+            width: 49.8%; /* Adjusted to fit side by side */
+            height: 600px;
+            float: left;
+            border: 1px solid #ccc;
+        }
+        select {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 160px;
+            z-index: 10;
+            height: 100px;
+        }
+        .legend {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 110px;
+            height: auto;
+            background: white;
+            border: 1px solid #ccc;
+            padding: 10px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <select id="countrySelect" multiple></select>
+    <div class="legend"></div>
+    <svg id="population"></svg>
+    <svg id="doctors"></svg>
+    <div class="tooltip"></div>
+
+    <script>
+        Promise.all([
+            d3.csv("Population_growth_rate.csv"),
+            d3.csv("Doctors_growth_rate.csv")
+        ]).then(function(datasets) {
+            var dataPopulation = datasets[0];
+            var dataDoctors = datasets[1];
+
+            const years = ['2015', '2016', '2017', '2018', '2019', '2020', '2021'];
+
+            var countriesDataPopulation = dataPopulation.map(function(country) {
+                return {
+                    country: country.Country,
+                    values: years.map(function(year) {
+                        return { year: d3.timeParse("%Y")(year), value: +country[year], country: country.Country };
+                    })
+                };
+            });
+
+            var countriesDataDoctors = dataDoctors.map(function(country) {
+                return {
+                    country: country.Country,
+                    values: years.map(function(year) {
+                        return { year: d3.timeParse("%Y")(year), value: +country[year], country: country.Country };
+                    })
+                };
+            });
+
+            var margin = {top: 50, right: 50, bottom: 50, left: 50},
+                width = document.body.clientWidth / 2 - margin.left - margin.right,
+                height = 600 - margin.top - margin.bottom;
+
+            var x = d3.scaleTime()
+                .domain([d3.min(years, d => d3.timeParse("%Y")(d)), d3.max(years, d => d3.timeParse("%Y")(d))])
+                .range([0, width]);
+
+            var yPopulation = d3.scaleLinear()
+                .domain(d3.extent(countriesDataPopulation.flatMap(c => c.values), d => d.value))
+                .range([height, 0]);
+
+            var yDoctors = d3.scaleLinear()
+                .domain(d3.extent(countriesDataDoctors.flatMap(c => c.values), d => d.value))
+                .range([height, 0]);
+
+            var svgPopulation = d3.select("#population").append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+            var svgDoctors = d3.select("#doctors").append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            // Axis setup
+            var xAxisPopulation = svgPopulation.append("g")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(x));
+            var yAxisPopulation = svgPopulation.append("g").call(d3.axisLeft(yPopulation));
+
+            var xAxisDoctors = svgDoctors.append("g")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(x));
+            var yAxisDoctors = svgDoctors.append("g").call(d3.axisLeft(yDoctors));
+
+            var color = d3.scaleOrdinal(d3.schemeCategory10);
+            var line = d3.line()
+                .curve(d3.curveMonotoneX)
+                .x(d => x(d.year))
+                .y(d => yPopulation(d.value));
+
+            var tooltip = d3.select(".tooltip");
+
+            function updateLineChart(svg, data, yScale, yAxis) {
+                var update = svg.selectAll(".countryGroup").data(data, d => d.country);
+                var enter = update.enter().append("g").attr("class", "countryGroup");
+
+                enter.merge(update).each(function(d) {
+                    var group = d3.select(this);
+                    var path = group.selectAll("path")
+                        .data([d.values], d => d.country);
+
+                    path.enter().append("path")
+                        .attr("class", "line")
+                        .merge(path)
+                        .transition()
+                        .duration(1500)
+                        .ease(d3.easeCubicInOut) // Added smooth transition
+                        .attr("d", line.y(d => yScale(d.value)))
+                        .attr("fill", "none")
+                        .attr("stroke", () => color(d.country))
+                        .attr("stroke-width", 2);
+
+                    group.selectAll("circle")
+                        .data(d.values)
+                        .join("circle")
+                        .attr("cx", d => x(d.year))
+                        .attr("cy", d => yScale(d.value))
+                        .attr("r", 3)
+                        .attr("fill", color(d.country))
+                        .on("mouseover", function(event, d) {
+                            tooltip.transition().duration(200).style("opacity", .9);
+                            tooltip.html(`Country: ${d.country}<br/>Year: ${d3.timeFormat("%Y")(d.year)}<br/>Value: ${d.value}`)
+                                .style("left", (event.pageX + 5) + "px")
+                                .style("top", (event.pageY - 28) + "px");
+                        })
+                        .on("mouseout", function() {
+                            tooltip.transition().duration(500).style("opacity", 0);
+                        });
+
+                    yAxis.transition().duration(5000).ease(d3.easeCubicInOut).call(d3.axisLeft(yScale)); // Smoother axis transition
+                });
+
+                update.exit().remove();
+            }
+
+            var select = d3.select("#countrySelect").on("change", function() {
+                var selectedOptions = Array.from(this.selectedOptions, option => option.value);
+                updateChart(selectedOptions);
+            });
+
+            select.append("option").attr("value", "All").text("All Countries");
+
+            countriesDataPopulation.forEach(function(d) {
+                select.append("option").attr("value", d.country).text(d.country);
+            });
+
+            var legend = d3.select(".legend");
+            legend.selectAll("div")
+                .data(countriesDataPopulation)
+                .enter().append("div")
+                .style("color", d => color(d.country))
+                .text(d => d.country);
+
+            function updateChart(selectedCountries) {
+                var filteredPopulationData = selectedCountries.includes("All") ? countriesDataPopulation : countriesDataPopulation.filter(d => selectedCountries.includes(d.country));
+                var filteredDoctorsData = selectedCountries.includes("All") ? countriesDataDoctors : countriesDataDoctors.filter(d => selectedCountries.includes(d.country));
+
+                updateLineChart(svgPopulation, filteredPopulationData, yPopulation, yAxisPopulation);
+                updateLineChart(svgDoctors, filteredDoctorsData, yDoctors, yAxisDoctors);
+            }
+
+            updateChart(["All"]);  // Initially show all countries
+        });
+    </script>
+</body>
+</html>

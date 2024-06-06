@@ -1,0 +1,199 @@
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href='./css/main.css' />
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="script/map.js"></script>
+    <script src="script/line.js"></script>
+    <script src="script/bar.js"></script>
+    <script src="script/sankeyChart.js"></script>
+    <script src="https://unpkg.com/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>     <!-- Plugin for sankey -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous" /> <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.3/font/bootstrap-icons.css" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
+    <style>
+        
+
+#bd-chart {
+    background-color: #F9E0BB;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+}
+
+.rounded-section {
+    background-color: white;
+    border-radius: 10px;
+    width: 97%;
+    padding: 20px;
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+
+.intro{
+  background: linear-gradient(rgba(0,0,0,0.4), #51493f), url(../images/imagration.jpg);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+ 
+  height: 110vh;
+}
+
+/* introduction paragraph */
+.intro div{
+    text-align: center;
+    padding-left: 20%;
+    padding-right: 20%;
+    position: relative;
+    color: #ffffff;
+    top: 50%;
+    transform: translateY(-50%); 
+}
+.intro p{ 
+    
+    font-size: 30;
+   
+}
+.intro h1{ 
+    font-size: 45;
+    margin-bottom: 20px;
+}
+
+
+.chart{
+    text-align: center;
+}
+.visualisation{
+    margin: 30px;
+}
+
+.brief-vis{
+    text-align: center;
+    margin: auto;
+    margin-bottom: 20px;
+    width: 70%;
+}
+h3{
+    margin-left: 30px;
+}
+.map{
+    overflow: hidden;
+}
+.select-map{
+  
+    position: relative;
+    float: left;
+    top: 50%;
+    transform: translate(-20%,200%);
+}
+
+.select-state{
+    float: right;
+    position: relative;
+    top: 50%;
+    transform: translate(-20%, 400%);
+}
+
+.border-svg {
+    border: 1px solid darkgray;
+}
+.select-map svg{
+    overflow: hidden;
+    stroke:black;
+}
+.line{
+    fill: none;
+    stroke: rgb(61, 59, 59);
+    stroke-width: 0.8;
+    /* stroke-dasharray: 5; */
+}
+
+.title-bar{
+    min-height: 20%;
+}
+
+#timeline{
+    margin-top: 30px;
+    margin-bottom: 30px;
+}
+
+.link {
+    fill: none;
+    stroke: #000;
+    stroke-opacity: .2;
+  }
+  .link:hover {
+    stroke-opacity: .5;
+  }
+
+#buttons{
+    margin: auto;
+    width: 70%;
+}
+
+
+#yearLabel{
+    font-weight: bold;
+}
+    </style>
+    <title>Migration</title>
+</head>
+<body>
+
+    
+    <div class ="intro"> 
+        <div >
+            <h1>Migration</h1>
+            <p>Explore Australian migration rate statistics on our website. Gain insights into migration trends and patterns in Australia. Discover the stories behind the numbers. Join us in analyzing the dynamics of Australian migration.</p>    
+        </div>
+    </div>
+    <div id = "bd-chart">
+        <!-- Choropleth and bar chart -->
+        <section class="rounded-section">
+            <div class = "visualisation container-fluid" >
+                
+                <p class = "brief-vis ">Explore Australian migration rate statistics through our interactive heatmap and detailed bar charts. Click on a region to reveal the arrival and departure rates from 2004 to 2021 for that specific region. Click outside the heatmap to access statistics on the overall migration pattern in Australia.</p>
+               
+                <div class="row">
+                    <div class = "col chart">
+                        <h3 class = "title-map">Arrivals to Australia in 2021</h3> <!-- drop-down to select direction of migration  -->
+                        <div class="map">
+                        </div>
+                    </div>
+                    <div class = "col chart">
+                        <h3 class = "title-bar">Title</h3> <!-- bar chart -->
+                        <div class="barchart"> 
+                        </div>
+                </div>
+                </div>
+                
+            </div>
+        </section>
+        <!-- Snakey diagram -->
+        <section class="rounded-section">
+            <div class = "visualisation container-fluid" >
+                <p class = "brief-vis ">Discover our interactive chart mapping the top 10 origin countries of immigrants to Australian regions. With a timeline feature, switch between different timelines to observe changing patterns over time. Discover the cultural diversity within regions and uncover the stories behind Australia's multicultural tapestry. You can click on a node to exclusively view its related information.</p>
+                <div class = "row chart">
+                    <h3 class = "title-sankey">Top 10 countries migration to Australia from 2004 to 2009</h3>
+                    <div class="sankey-chart">
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- line chart -->
+        
+        <footer class="container">
+            <ul class="nav justify-content-center border-bottom">
+              <li class="nav-item"><span class="nav-link px-2 text-muted">Gia Hung Tran - 103509199</span></li>
+              <li class="nav-item"><span class="nav-link px-2 text-muted"> Thao Ngan Ngo - 104055130</span></li>
+            </ul>
+            <p class="text-center text-muted">COS30045 - Data Visualisation | Semester 1 2023 | Swinburne University of Technology</p>
+        </footer>
+    
+    </div>
+   
+    <script src="script/main.js"></script>
+</body>
